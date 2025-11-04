@@ -1,1 +1,71 @@
-# KAMP_AI_HeatTreatment_LinearRegression
+# KAMP AI HeatTreatment LinearRegression
+# 오스템퍼링 공정의 내폭 불량 예측을 위한 선형회귀 기반 분석
+
+## 1. 연구 목적
+본 연구는 오스템퍼링 공정에서 발생하는 **내폭 불량의 주요 원인**을 규명하기 위해  
+온도 구배, 냉각 응력 등 물리적 요인을 기반으로 한 **선형회귀 모델**을 구축하였다.  
+특히, 공정별 로그데이터(raw_total_data.csv)와 불량 이력(label.xlsx)을 활용하여  
+데이터 기반의 품질 관리 및 공정 제어 가이드라인을 도출하는 것을 목표로 한다.
+
+---
+
+## 2. 데이터 전처리 및 물리기반 피처 추출
+원시 제조 데이터는 소입로, 솔트조, 솔트컨베이어의 구간별 온도를 포함하고 있으며  
+이를 통해 다음과 같은 물리적 파생 변수를 정의하였다.
+
+- `gradient_to_salt_mean` : 소입로 4존과 솔트조 간의 평균 온도차  
+- `gradient_2nd_mean` : 솔트조와 솔트컨베이어 간의 2차 온도 구배  
+- `sigma_slot` : 열응력(Elastic modulus, thermal expansion coefficient 기반)  
+- `T_salt_std` : 솔트조의 온도 표준편차  
+- `T_conv_std` : 솔트컨베이어의 온도 표준편차
+
+이러한 변수들은 모두 **열적 불균일성과 냉각응력의 지표**로 해석되며,  
+내폭 불량의 발생 가능성을 정량적으로 평가하기 위한 입력 피처로 사용되었다.
+
+---
+
+## 3. 모델링 방법
+데이터 분석 및 회귀모델 구축은 전 과정이  
+**Python 오픈소스 라이브러리(NumPy, Pandas, scikit-learn, statsmodels)** 로 수행되었다.
+
+- **단순 선형회귀(OLS)** : 각 변수별 불량률(`defect_rate`)의 단일 상관관계 분석  
+- **다중 선형회귀(OLS)** : `gradient_to_salt_mean`, `gradient_2nd_mean`, `sigma_slot`, `T_conv_std`를 동시에 고려하여 다변수 간 관계를 평가  
+- **결정계수(R²), p-value, 회귀계수(Coef)** 를 주요 평가 지표로 활용  
+
+---
+
+## 4. 주요 결과
+- 기존 단변수 모델의 결정계수 R² ≈ **0.004** 수준에서  
+  다중 회귀모델은 R² ≈ **0.242**로 **약 60배 향상된 설명력**을 보였다.
+- `gradient_to_salt_mean`, `gradient_2nd_mean`은 불량률과 **정(+)의 상관관계**,  
+  `sigma_slot`은 **유의한 음(-)의 상관관계(p < 0.05)** 를 나타냈다.
+- 솔트컨베이어 온도 표준편차(`T_conv_std`)는 공정 불균일성과 불량률 증가 경향을 보였다.
+
+---
+
+## 5. 결과 해석
+통계적 유의성은 낮았으나,  
+모든 변수의 계수 부호가 **냉각응력 이론(thermal stress theory)** 과 일치하였다.  
+즉,  
+- 온도차 증가 → 열응력 증가 → 불량률 상승  
+- 응력 안정화 및 온도 균일성 확보 → 불량률 감소  
+
+이와 같은 경향성은 물리적으로 일관성이 있으며,  
+공정 제어 변수(온도차, 응력, 표준편차 등)의 관리 기준을 제시할 수 있다.
+
+---
+
+## 6. 결론 및 시사점
+본 연구는 Python 오픈소스만으로 공정 데이터를 분석하여  
+**중소 제조기업이 자체적으로 품질 예측 시스템을 구축할 수 있음을 입증**하였다.  
+물리기반 피처를 결합한 회귀모델은  
+단순 통계적 접근을 넘어 **해석 가능한 AI 모델**로 확장 가능하며,  
+PINN(Physics-Informed Neural Network) 등의 고급 모델링에 적용할 수 있는  
+**데이터-물리 융합형 품질관리 프레임워크의 기초 모델**로 활용될 수 있다.
+
+---
+
+## 7. 참고 문헌
+- Austenitic Steel Thermal Property Data (Thermal Conductivity ≈ 26.7 W/m·K)  
+- General Physical Constants of Medium Carbon Steel  
+- Empirical Correlations for Thermal Stress during Austempering  
